@@ -1,6 +1,6 @@
 /* Blueprint HQ backend (based on the Let's Roll / Lunchbox HQ kit).
    Supabase stands in for the capabilities the app used inside Claude:
-   window.claude.use("db" | "user" | "sample" | "assets" | "downloads") with the same shape the app expects.
+   window.claude.use("db" | "user" | "sample" | "assets" | "downloads" | "dictation") with the same shape the app expects.
    A sign-in screen shows until a team member is logged in. After that, Blueprint's own
    "Who's working?" name + PIN screen picks the person. */
 (function () {
@@ -253,7 +253,26 @@
     resolveReady();
   }
 
-  const caps = { db, user, sample, assets, downloads };
+  /* ---------- dictation: the phone's own speech-to-text (Chrome, Android, Safari) ---------- */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const dictation = SR ? (() => {
+    let rec = null, cbP = () => {}, cbF = () => {}, cbS = () => {}, want = false;
+    const langOf = () => window.BP_DICT_LANG || ({ th: "th-TH", hi: "hi-IN", my: "my-MM" }[localStorage.getItem("bp-speak") || localStorage.getItem("bp-lang")] || "en-US");
+    const make = () => {
+      const r = new SR(); r.lang = langOf(); r.interimResults = true; r.continuous = true;
+      r.onresult = e => { let part = ""; for (let i = e.resultIndex; i < e.results.length; i++) { const x = e.results[i]; if (x.isFinal) cbF({ text: x[0].transcript.trim() }); else part += x[0].transcript; } cbP({ text: part }); };
+      r.onend = () => { if (want) { try { r.start(); return; } catch (e) {} } rec = null; cbS({ state: "idle", reason: "stopped" }); };
+      r.onerror = e => { if (e.error === "not-allowed" || e.error === "service-not-allowed") { want = false; cbS({ state: "idle", reason: "not_granted" }); } };
+      return r;
+    };
+    return {
+      start() { return new Promise((res, rej) => { try { want = true; rec = make(); rec.start(); cbS({ state: "listening" }); res(); } catch (e) { want = false; rej({ code: "error", message: String(e) }); } }); },
+      async stop() { want = false; if (rec) { try { rec.stop(); } catch (e) {} } },
+      onPartial(f) { cbP = f; }, onFinal(f) { cbF = f; }, onState(f) { cbS = f; }
+    };
+  })() : null;
+
+  const caps = { db, user, sample, assets, downloads, dictation };
   window.claude = { use: async name => { if (!sb) return null; await readyP; return caps[name] || null; } };
   window.lrSb = sb;
   window.lrSignOut = () => sb && sb.auth.signOut().then(() => location.reload());
