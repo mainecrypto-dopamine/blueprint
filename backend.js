@@ -216,6 +216,25 @@
     };
   }
 
+  /* ---------- "you did it" celebration after confirming the email / signing in ---------- */
+  let justSignedIn = false;
+  function celebrate() {
+    const t = TH(), el = document.createElement("div");
+    el.id = "lrYay";
+    el.style.cssText = "position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(10,10,10,.82);pointer-events:none;font:16px/1.4 Inter,system-ui,sans-serif;color:#F2EDE4;animation:lrFade 3.2s ease forwards";
+    const bits = Array.from({ length: 70 }, (_, i) => {
+      const c = ["#C8A96E", "#00AEC7", "#3ecf8e", "#F2EDE4", "#ff8592"][i % 5], x = Math.random() * 100, d = 0.6 + Math.random() * 1.4, r = Math.random() * 720 - 360, w = 6 + Math.random() * 8;
+      return `<i style="position:absolute;top:-20px;left:${x}vw;width:${w}px;height:${w * 0.5}px;background:${c};border-radius:2px;animation:lrDrop ${d + 1.2}s ${Math.random() * 0.5}s cubic-bezier(.2,.7,.4,1) forwards;--r:${r}deg"></i>`;
+    }).join("");
+    el.innerHTML = `<style>@keyframes lrDrop{to{transform:translateY(110vh) rotate(var(--r));opacity:.9}}@keyframes lrPop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}@keyframes lrFade{0%,80%{opacity:1}100%{opacity:0}}</style>${bits}
+      <div style="text-align:center;animation:lrPop .6s ease-out both"><div style="font-size:84px;line-height:1">👍</div>
+      <div style="font:700 30px 'Space Grotesk',Inter,sans-serif;margin-top:10px">${t ? "เรียบร้อย! คุณเข้าสู่ระบบแล้ว" : "You're in!"}</div>
+      <div style="color:#C8A96E;margin-top:6px">${(member && member.email || "").replace(/[<>&"]/g, "")} ${t ? "ยืนยันแล้ว" : "confirmed"} ✓</div>
+      <div style="color:#bdb6aa;margin-top:4px;font-size:14px">${t ? "ต่อไป: กดชื่อของคุณและใส่ PIN" : "Next: tap your name and enter your PIN"}</div></div>`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3300);
+  }
+
   let admitting = false;
   async function admit(s) { if (member || admitting) return; admitting = true; try { await admitInner(s); } finally { admitting = false; } }
   async function admitInner(s) {
@@ -229,6 +248,7 @@
     }
     member = data; window.lrMember = data;
     document.getElementById("lrGate")?.remove();
+    if (justSignedIn) { justSignedIn = false; celebrate(); }
     if (!loaded) { goLive(); await loadAll().catch(console.error); }
     resolveReady();
   }
@@ -243,6 +263,7 @@
     const q = new URLSearchParams(location.search), h = new URLSearchParams(location.hash.slice(1));
     const urlErr = q.get("error_description") || h.get("error_description");
     const tidy = () => { if (q.get("code") || h.get("access_token") || urlErr) history.replaceState(null, "", location.pathname); };
+    if (q.get("code") || h.get("access_token") || h.get("type")) justSignedIn = true;
     (async () => {
       if (q.get("code")) { const { error } = await sb.auth.exchangeCodeForSession(q.get("code")); if (error) console.error("code exchange", error); }
       const { data, error } = await sb.auth.getSession();
@@ -250,6 +271,6 @@
       if (urlErr || error) { showEmail("Google sign-in: " + (urlErr || error.message).replace(/\+/g, " ")); return; }
       admit(data.session);
     })();
-    sb.auth.onAuthStateChange((ev, s) => { if (ev === "SIGNED_IN" && !member) admit(s); if (ev === "SIGNED_OUT") location.reload(); });
+    sb.auth.onAuthStateChange((ev, s) => { if (ev === "SIGNED_IN" && !member) { justSignedIn = true; admit(s); } if (ev === "SIGNED_OUT") location.reload(); });
   });
 })();
