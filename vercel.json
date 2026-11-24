@@ -1,0 +1,20 @@
+{
+  "redirects": [
+    {
+      "source": "/_blob/:id",
+      "destination": "https://jueacqzqwwsvkbibsttt.supabase.co/storage/v1/object/public/assets/:id",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
+}
