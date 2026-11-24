@@ -272,7 +272,13 @@
     };
   })() : null;
 
-  const caps = { db, user, sample, assets, downloads, dictation };
+  /* ---------- tts: the phone's own voice reads answers aloud ---------- */
+  const tts = window.speechSynthesis ? {
+    speak(text) { return new Promise(res => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(text).slice(0, 2000)); const L = /[\u0E00-\u0E7F]/.test(text) ? "th-TH" : /[\u1000-\u109F]/.test(text) ? "my-MM" : "en-US"; u.lang = L; u.onend = u.onerror = () => res(); speechSynthesis.speak(u); } catch (e) { res(); } }); },
+    stop() { try { speechSynthesis.cancel(); } catch (e) {} }, onState() {}
+  } : null;
+
+  const caps = { db, user, sample, assets, downloads, dictation, tts };
   window.claude = { use: async name => { if (!sb) return null; await readyP; return caps[name] || null; } };
   window.lrSb = sb;
   window.lrSignOut = () => sb && sb.auth.signOut().then(() => location.reload());
