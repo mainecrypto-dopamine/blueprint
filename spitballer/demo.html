@@ -1,0 +1,17 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spitballer demo</title>
+<style>body{background:#0e0e0e;color:#eee;font-family:system-ui;margin:0;padding:20px}</style></head><body>
+<h1 id="page">Home</h1><p>Tap the 🎯 button. Say "orders", "show me the map", or ramble a note.</p><ul id="notes"></ul>
+<script src="spitballer.js"></script>
+<script>
+const notes=[];
+const sb=Spitballer.mount({
+  app:"Demo app", user:()=>"Isaac",
+  pages:[
+    {id:"map",label:"Map",icon:"🗺",words:["map","route","where"],open:()=>document.getElementById('page').textContent='Map'},
+    {id:"orders",label:"Orders",icon:"🛒",words:["orders","order list","buy"],open:()=>document.getElementById('page').textContent='Orders'},
+    {id:"team",label:"Team",icon:"👥",words:["team","themes","crew"],open:()=>document.getElementById('page').textContent='Team'}
+  ],
+  snapshot:()=>"Orders: 3 open (rockwool, gloves, domes). Team: Matt, Rich, Josh.",
+  onNote:async n=>{notes.unshift(n);document.getElementById('notes').innerHTML=notes.map(x=>'<li>'+x.text.replace(/</g,'&lt;')+'</li>').join('')}
+});
+</script></body></html>
