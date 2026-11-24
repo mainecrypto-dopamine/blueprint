@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0A0A0A"/>
+  <g stroke="#00AEC7" stroke-opacity=".18" stroke-width="2">
+    <path d="M0 64H512M0 128H512M0 192H512M0 256H512M0 320H512M0 384H512M0 448H512M64 0V512M128 0V512M192 0V512M256 0V512M320 0V512M384 0V512M448 0V512"/>
+  </g>
+  <rect x="88" y="88" width="336" height="336" rx="44" fill="none" stroke="#C8A96E" stroke-width="14"/>
+  <text x="256" y="318" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-weight="700" font-size="170" fill="#F2EDE4">BP</text>
+  <text x="256" y="382" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" letter-spacing="6" fill="#C8A96E">HQ</text>
+</svg>
